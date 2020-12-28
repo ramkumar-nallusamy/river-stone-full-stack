@@ -13,6 +13,17 @@ const { validate } = require('../models/User');
 //     email:joi.string().min(6).max(256).required(),
 //     password:joi.string().max(6).max(20).required()
 // }
+router.get('', (req,res) => {
+    const data = User.find((err,data) => {
+        if(err) {
+            res.status(400).send(err)
+        }
+        else {
+            res.send(data)
+        }
+    })
+
+})
 
 router.post('/register',async(req,res) => {
 
@@ -49,13 +60,23 @@ router.post('/login', async (req,res) => {
     else {
         const validPassword = await bcrypt.compare(req.body.password,user.password)
         if(validPassword) {
-            res.send({user})
+            if(user.isActive) {
+                res.send({user})
+            }
+            else {
+                res.status(400).send("Admin deactivated your account.Please contact admin.")
+            }
         }
         else {
-            res.send("wrong Password entered")
+            res.status(403).send("wrong Password entered. Please try again")
         }
     }
-
 })
-
+// admin routes
+router.put('/user/:id',(req,res) => {
+    User.findByIdAndUpdate({_id:req.params.id},req.body)
+    .then( (data) => {
+        res.send(data)
+    })
+})
 module.exports = router
